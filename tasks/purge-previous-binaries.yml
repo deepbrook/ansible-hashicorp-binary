@@ -1,0 +1,16 @@
+# A yaml file.
+---
+- name: Remove previously installed binaries
+  block:
+    - name: Find binaries in {{ hashicorp_bin_path }}
+      find:
+        path: "{{ hashicorp_bin_path }}"
+        patterns: "{{ d.name + '_*' for d in hashicorp_binaries| join(',') }}"
+      register: found_binaries
+
+    - name: Remove binaries
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ found_binaries.files }}"
+...

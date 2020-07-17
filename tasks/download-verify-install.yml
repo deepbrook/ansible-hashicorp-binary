@@ -1,0 +1,52 @@
+# Expects loop_var of "binary" to be defined outside of file, and it must be
+# a dictionary with keys 'version', 'name'
+---
+- name: Construct archive root url, archive, checksum and checksum signature file names
+  set_fact:
+    binary_archive: "{{ binary.name }}_{{ binary.version }}_{{ binary.platform|default(hashicorp_target_platform) }}_{{ binary.arch|default(hashicorp_target_arch) }}.zip"  # yamllint disable-line rule:line-length
+    archive_checksum: "{{ binary.name }}_{{ binary.version }}_SHA256SUMS"
+    archive_checksum_sig: "{{ binary.name }}_{{ binary.version }}_SHA256SUMS.sig"
+    binary_root_url: https://releases.hashicorp.com/{{ binary.name }}/{{ binary.version }}
+
+- name: Verify checksums if not on windows machines
+  block:
+    - name: Download checksums file and signature
+      get_url:
+        url: "{{ binary_root_url }}//{{ item }}"
+        dest: "{{ hashicorp_tmp_dir }}"
+        loop:
+          - "{{ archive_checksum }}"
+          - "{{ archive_checksum_sig }}"
+
+    - name: Verify authenticity of Checksum file
+      command: >
+        gpg --verify {{ hashicorp_tmp_dir }}/{{ archive_checksum_sig }}
+        {{ hashicorp_tmp_dir }}/{{ archive_checksum }}
+      register: gpg_verify
+  when: "binary.platform|default(hashicorp_default_platform) != 'windows'"
+
+- name: Fetch and unpack archive if signature check passed
+  block:
+    - name: Download archive if checksums match
+      get_url:
+        url: "{{ binary_root_url }}/{{ binary_archive }}"
+        checksum: "sha256:{{ hashicorp_tmp_dir }}/{{ archive_checksum }}"
+        dest: "{{ hashicorp_tmp_dir }}"
+      register: archive_download
+
+    - name: Unpack binary, if archive was downloaded
+      unarchive:
+        src: "{{ hashicorp_tmp_dir }}/{{ binary_archive }}"
+        dest: "{{ hashicorp_bin_dir }}/{{ binary.name }}_{{ binary.version }}"
+      when: archive_download is changed
+      register: archive_unpack
+
+    - name: Create or update symlink for binary
+      file:
+        state: soft
+        dest: "{{ hashicorp_bin_path }}/{{ binary.name }}"
+        src: "{{ hashicorp_bin_path }}/{{ binary.name }}_{{ binary.version }}"
+        mode: 0755
+      when: archive_unpack is changed and hashicorp_update_symlink
+  when: gpg_verify is not failed
+...

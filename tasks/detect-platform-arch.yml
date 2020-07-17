@@ -1,0 +1,47 @@
+---
+- name: Auto-select architecture
+  block:
+    - name: Set Default arch
+      set_fact:
+        binary_target_arch: amd64
+
+    - name: Target arch is ARM
+      set_fact:
+        binary_target_arch: arm
+      when: "'arm' in ansible_machine"
+
+    - name: Target arch is 32-bit system
+      set_fact:
+        binary_target_arch: "386"
+      when: "ansible_machine == 'i386'"
+
+  when: hashicorp_target_arch is not defined
+
+- name: Auto-select platform
+  block:
+    - name: Set default target platform
+      set_fact:
+        binary_target_platform: "linux"
+        when: "ansible_os_family not in ['solaris', 'freebsd']"
+
+    - name: Detected solaris platform
+      set_fact:
+        binary_target_platform: solaris
+      when: "ansible_os_family|lower == 'solaris'"
+
+    - name: Detected freebsd platform
+      set_fact:
+        binary_target_platform: freebsd
+      when: "ansible_os_family|lower == 'freebsd'"
+
+    - name: Detected windows platform
+      set_fact:
+        binary_target_platform: windows
+      when: "ansible_os_family|lower == 'windows'"
+
+    - name: Detected darwin platform
+      set_fact:
+        binary_target_platform: darwin
+      when: "ansible_os_family|lower == 'darwin'"
+  when: hashicorp_target_platform is not defined
+...

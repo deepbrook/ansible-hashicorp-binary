@@ -1,0 +1,27 @@
+---
+- name: Ensure unzip is installed.
+  package: { name: unzip, state: present }
+
+- name: Ensure gpg2 is installed
+  package: { name: gpg2, state: present }
+
+- name: Auto-detect platform, arch of target
+  import_tasks: detect-platform-arch.yml
+
+- name: Remove existing binaries
+  vars:
+    binary:
+      name: "{{ binary.name }}"
+      version: "{{ item }}"
+      arch: "{{ binary.arch }}"
+      platform: "{{ binary.platform }}"
+  include_tasks: purge-previous-binaries.yml
+  loop: "{{ hashicorp_binaries }}"
+  when: hashicorp_purge
+
+- name: Download and Unpack binaries
+  include_tasks: download-verify-install.yml
+  loop: "{{ hashicorp_binaries }}"
+  loop_control:
+    loop_var: binary
+...

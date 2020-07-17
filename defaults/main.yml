@@ -1,0 +1,14 @@
+---
+# Setting this to 'no' will disable updating symlinks for all binaries selected
+# to be installed.
+hashicorp_update_symlink: yes
+
+# By default, we remove previous versions. If you'd like to keep older versions
+# of your binaries, set this to 'no'
+hashicorp_purge: yes
+
+hashicorp_binaries:
+  - { name: vagrant, version: 2.2.6 }
+  - { name: packer, version: 1.5.1 }
+  - { name: terraform, version: 0.12.21 }
+...

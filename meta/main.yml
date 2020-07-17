@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: Nils Diefenbach
+  description: >
+    Download and install any Hashicorp binary available
+    on https://releases.hashicorp.com
+  license: MIT
+  min_ansible_version: 2.5
+  galaxy_tags: ["hashicorp", "packer", "vagrant", "terraform"]
+dependencies: []
+...
