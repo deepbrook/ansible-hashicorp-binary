@@ -1,5 +1,6 @@
 ---
 galaxy_info:
+  role_name: hashicorp-binary
   author: Nils Diefenbach
   description: >
     Download and install any Hashicorp binary available
